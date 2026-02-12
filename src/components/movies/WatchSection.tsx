@@ -2,10 +2,16 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Play, Server, ChevronDown, Check, Zap, Settings, RefreshCw } from 'lucide-react';
+import { Play, Server, ChevronDown, Check, Zap, Settings, RefreshCw, Maximize, Minimize } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 
 interface WatchSectionProps {
     mediaId: number;
@@ -217,6 +223,27 @@ export function WatchSection({ mediaId, title, mediaType = 'movie', season, epis
         setIsDropdownOpen(false);
     };
 
+    const [isFullscreen, setIsFullscreen] = useState(false);
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const toggleFullscreen = async () => {
+        if (!document.fullscreenElement) {
+            await containerRef.current?.requestFullscreen();
+            setIsFullscreen(true);
+        } else {
+            await document.exitFullscreen();
+            setIsFullscreen(false);
+        }
+    };
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+    }, []);
+
     const handleRetry = () => {
         setIframeKey(prev => prev + 1);
     };
@@ -318,14 +345,19 @@ export function WatchSection({ mediaId, title, mediaType = 'movie', season, epis
                     </div>
 
                     {/* Video Player */}
-                    <div className="relative group">
-                        {/* Glow Effect */}
-                        <div
-                            className="absolute -inset-1 rounded-2xl opacity-20 group-hover:opacity-40 blur-xl transition-all duration-1000"
-                            style={{ background: `linear-gradient(to right, ${selectedServer.color}, ${selectedServer.color}00)` }}
-                        />
+                    <div className="relative group" ref={containerRef}>
+                        {/* Glow Effect - Hidden in fullscreen */}
+                        {!isFullscreen && (
+                            <div
+                                className="absolute -inset-1 rounded-2xl opacity-20 group-hover:opacity-40 blur-xl transition-all duration-1000"
+                                style={{ background: `linear-gradient(to right, ${selectedServer.color}, ${selectedServer.color}00)` }}
+                            />
+                        )}
 
-                        <Card className="relative overflow-hidden bg-black/80 border-white/10 shadow-2xl rounded-2xl aspect-video w-full z-10">
+                        <Card className={cn(
+                            "relative overflow-hidden bg-black/80 border-white/10 shadow-2xl transition-all duration-300",
+                            isFullscreen ? "w-full h-full rounded-none border-0" : "rounded-2xl aspect-video w-full"
+                        )}>
                             <iframe
                                 key={iframeKey}
                                 src={selectedServer.urlTemplate(mediaId, season, episode)}
@@ -335,8 +367,8 @@ export function WatchSection({ mediaId, title, mediaType = 'movie', season, epis
                                 title={`Watching ${title} on ${selectedServer.name}`}
                             />
 
-                            {/* Overlay Controls (Hidden when playing usually, but good for aesthetics before load) */}
-                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                            {/* Overlay Controls */}
+                            <div className="absolute top-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300 z-50">
                                 <Button
                                     size="icon"
                                     variant="secondary"
@@ -346,10 +378,50 @@ export function WatchSection({ mediaId, title, mediaType = 'movie', season, epis
                                 >
                                     <RefreshCw className="w-4 h-4" />
                                 </Button>
-                                <div className="h-8 px-3 flex items-center gap-2 bg-black/50 backdrop-blur-md text-xs font-medium text-white border border-white/10 rounded-md">
-                                    <Server className="w-3 h-3" />
-                                    {selectedServer.name}
-                                </div>
+
+                                <Button
+                                    size="icon"
+                                    variant="secondary"
+                                    className="h-8 w-8 bg-black/50 hover:bg-black/70 backdrop-blur-md text-white border border-white/10"
+                                    onClick={toggleFullscreen}
+                                    title={isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
+                                >
+                                    {isFullscreen ? (
+                                        <Minimize className="w-4 h-4" />
+                                    ) : (
+                                        <Maximize className="w-4 h-4" />
+                                    )}
+                                </Button>
+
+                                {/* In-Player Server Selector */}
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <button className="h-8 px-3 flex items-center gap-2 bg-black/50 hover:bg-black/70 backdrop-blur-md text-xs font-medium text-white border border-white/10 rounded-md transition-colors">
+                                            <Server className="w-3 h-3" />
+                                            {selectedServer.name}
+                                            <ChevronDown className="w-3 h-3 opacity-70" />
+                                        </button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end" className="w-48 max-h-[300px] overflow-y-auto bg-black/90 backdrop-blur-xl border-white/10 text-white">
+                                        {servers.map((server) => (
+                                            <DropdownMenuItem
+                                                key={server.id}
+                                                onClick={() => handleServerSelect(server)}
+                                                className={cn(
+                                                    "cursor-pointer text-xs flex items-center gap-2 focus:bg-white/10 focus:text-white",
+                                                    selectedServer.id === server.id && "bg-primary/20 text-primary"
+                                                )}
+                                            >
+                                                <div
+                                                    className="w-2 h-2 rounded-full"
+                                                    style={{ backgroundColor: server.color }}
+                                                />
+                                                {server.name}
+                                                {selectedServer.id === server.id && <Check className="w-3 h-3 ml-auto" />}
+                                            </DropdownMenuItem>
+                                        ))}
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
                             </div>
                         </Card>
                     </div>

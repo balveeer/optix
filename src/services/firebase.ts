@@ -66,13 +66,24 @@ export async function signUpWithEmail(email: string, password: string, displayNa
         // Update display name
         await updateProfile(result.user, { displayName });
 
-        // Create user document in Firestore
-        await setDoc(doc(db, 'users', result.user.uid), {
-            email,
-            displayName,
-            createdAt: new Date().toISOString(),
-            watchlist: [],
-        });
+        // Create user document in Firestore with timeout
+        try {
+            const createDocPromise = setDoc(doc(db, 'users', result.user.uid), {
+                email,
+                displayName,
+                createdAt: new Date().toISOString(),
+                watchlist: [],
+            });
+
+            const timeoutPromise = new Promise((_, reject) =>
+                setTimeout(() => reject(new Error('Firestore creation timed out')), 5000)
+            );
+
+            await Promise.race([createDocPromise, timeoutPromise]);
+        } catch (dbError) {
+            console.warn('Firestore profile creation failed or timed out:', dbError);
+            // Continue execution. User is created in Auth, even if Firestore fails.
+        }
 
         return { user: result.user, error: null };
     } catch (error) {

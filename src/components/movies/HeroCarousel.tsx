@@ -20,6 +20,7 @@ interface HeroCarouselProps {
 }
 
 export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCarouselProps) {
+    const heroMovies = movies.slice(0, 7);
     const [[page, direction], setPage] = useState([0, 0]);
     const [isAutoPlaying, setIsAutoPlaying] = useState(true);
     const { addToWatchlist, removeFromWatchlist, isInWatchlist } = useWatchlistStore();
@@ -34,8 +35,8 @@ export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCa
     }, []);
 
     // Calculate current index with wrap logic
-    const movieIndex = ((page % movies.length) + movies.length) % movies.length;
-    const currentMovie = movies[movieIndex];
+    const movieIndex = ((page % heroMovies.length) + heroMovies.length) % heroMovies.length;
+    const currentMovie = heroMovies[movieIndex];
     const inWatchlist = currentMovie ? isInWatchlist(currentMovie.id, mediaType) : false;
     const currentLogo = currentMovie ? movieLogos[currentMovie.id] : null;
 
@@ -130,7 +131,7 @@ export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCa
     const posterVariants = {
         enter: { y: '100%', opacity: 0 },
         center: { y: 0, opacity: 1 },
-        exit: { opacity: 0, transition: { duration: 0.2 } }
+        exit: { opacity: 0, transition: { duration: 0.1 } }
     };
 
     return (
@@ -240,7 +241,7 @@ export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCa
                                 exit="exit"
                                 transition={{
                                     x: { type: "spring", stiffness: 300, damping: 30 },
-                                    opacity: { duration: 0.2 }
+                                    opacity: { duration: 0.05 }
                                 }}
                                 className="max-w-xl space-y-4 md:space-y-6 order-2 md:order-1 text-center md:text-left items-center md:items-start w-full pointer-events-none"
                             >
@@ -252,7 +253,7 @@ export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCa
                                     <motion.div
                                         initial={{ y: -50, opacity: 0 }}
                                         animate={{ y: 0, opacity: 1 }}
-                                        transition={{ duration: 0.5, delay: 0.2 }}
+                                        transition={{ duration: 0.3, delay: 0 }}
                                         className="relative w-32 aspect-[2/3] rounded-xl overflow-hidden shadow-2xl"
                                         style={{
                                             boxShadow: '0 25px 50px -12px rgba(168, 85, 247, 0.4), 0 0 0 1px rgba(168, 85, 247, 0.1)',
@@ -393,14 +394,14 @@ export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCa
             {/* Navigation Arrows - Hidden on mobile, visible on desktop */}
             <button
                 onClick={goToPrevious}
-                className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all group"
+                className="hidden md:block absolute left-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all group z-30 pointer-events-auto"
                 aria-label="Previous slide"
             >
                 <ChevronLeft className="w-6 h-6 group-hover:scale-110 transition-transform" />
             </button>
             <button
                 onClick={goToNext}
-                className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all group"
+                className="hidden md:block absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-full bg-black/40 backdrop-blur-sm hover:bg-black/60 transition-all group z-30 pointer-events-auto"
                 aria-label="Next slide"
             >
                 <ChevronRight className="w-6 h-6 group-hover:scale-110 transition-transform" />
@@ -408,7 +409,7 @@ export function HeroCarousel({ movies, movieLogos, mediaType = 'movie' }: HeroCa
 
             {/* Slide Indicators */}
             <div className="absolute bottom-6 md:bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2 z-20">
-                {movies.map((_, index) => (
+                {heroMovies.map((_, index) => (
                     <button
                         key={index}
                         onClick={() => goToSlide(index)}

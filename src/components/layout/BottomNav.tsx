@@ -7,7 +7,7 @@ import { motion } from 'framer-motion';
 
 const navItems = [
     { href: '/', icon: Home, label: 'Home' },
-    { href: '/?type=tv', icon: Tv, label: 'Series' },
+
     { href: '/search', icon: Search, label: 'Search' },
     { href: '/profile', icon: User, label: 'Profile' },
 ];

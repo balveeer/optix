@@ -60,7 +60,7 @@ export function Navbar() {
                         className={`text-sm font-medium transition-colors hover:text-primary ${pathname === '/' ? 'text-primary' : 'text-muted-foreground'
                             }`}
                     >
-                        Home
+                        Movies
                     </Link>
                     <Link
                         href="/?type=tv"
@@ -88,11 +88,7 @@ export function Navbar() {
                 {/* Right Side Actions */}
                 <div className="flex items-center gap-3">
                     {/* Search Button (Mobile) */}
-                    <Link href="/search" className="md:hidden">
-                        <Button variant="ghost" size="icon" className="hover:bg-primary/10">
-                            <Search className="w-5 h-5" />
-                        </Button>
-                    </Link>
+
 
                     {/* User Menu */}
                     {user ? (
