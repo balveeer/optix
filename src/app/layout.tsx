@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
@@ -35,7 +36,6 @@ export const metadata: Metadata = {
   },
   manifest: "/icons/manifest.json",
 };
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -45,7 +45,9 @@ export default function RootLayout({
     <html lang="en" className="dark">
       <body className={`${inter.variable} antialiased min-h-screen`} suppressHydrationWarning>
         <AuthProvider>
-          <Navbar />
+          <Suspense fallback={<div className="h-16 w-full fixed top-0 left-0 z-50 bg-background/80 backdrop-blur-md border-b border-border" />}>
+            <Navbar />
+          </Suspense>
           <main className="pt-16 pb-20 md:pb-8 min-h-screen">
             {children}
           </main>
